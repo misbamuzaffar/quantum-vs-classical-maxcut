@@ -1,107 +1,119 @@
 # Quantum vs. Classical Optimization: Max-Cut with QAOA
 
-A research-style benchmark comparing a classical exact solver with the Quantum Approximate Optimization Algorithm (QAOA) on small Max-Cut problems.
+A numerical study comparing the Quantum Approximate Optimization Algorithm (QAOA) with an exact classical solver on small Max-Cut problems.
 
 ## Research Question
 
-How does QAOA compare with a classical exact method on small combinatorial optimization problems as graph size and QAOA circuit depth change?
+How does QAOA compare with a classical exact method on small combinatorial optimization problems as graph size and QAOA circuit depth increase?
 
-This project focuses on:
+This project uses simulation to study solution quality and computational cost. It does **not** claim quantum advantage.
 
-- formulating Max-Cut as a binary optimization problem,
-- solving the same instances with a classical brute-force method and QAOA,
-- comparing objective value, approximation ratio, and runtime,
-- studying how QAOA depth (`reps`) changes solution quality,
-- producing reproducible numerical experiments and plots.
+## Method
 
-> This is a learning/benchmark project using quantum simulation. It does **not** claim quantum advantage.
+Random connected graphs are generated with 6, 8, and 10 nodes using multiple random seeds.
 
-## Why Max-Cut?
+For each graph:
 
-For a graph \(G=(V,E)\), Max-Cut divides vertices into two sets so that as many edges as possible cross between them. It is a standard combinatorial optimization problem and can be represented as a QUBO/Ising Hamiltonian, which makes it a natural introductory problem for QAOA.
+1. Solve Max-Cut exactly using classical brute-force enumeration.
+2. Formulate Max-Cut as a binary quadratic optimization problem.
+3. Solve the same problem using QAOA with circuit depths:
+   - p = 1
+   - p = 2
+   - p = 3
+4. Compare QAOA with the known classical optimum using:
+
+   **Approximation Ratio = QAOA Cut Value / Exact Optimal Cut Value**
+
+5. Record runtime for each method.
+
+## Results
+
+Across the tested 6- and 8-node instances, all QAOA depths recovered the exact optimal cut.
+
+For one 10-node instance, QAOA at p = 1 produced a cut value of 16 compared with the exact optimum of 17:
+
+**Approximation ratio = 16 / 17 = 0.941**
+
+Increasing the depth to p = 2 recovered the optimal cut of 17. QAOA at p = 3 also recovered the optimum but required additional simulation time.
+
+Across the three 10-node instances:
+
+| Method | Mean Approximation Ratio | Mean Runtime (s) |
+|---|---:|---:|
+| Classical Exact | 1.0000 | 0.0070 |
+| QAOA p=1 | 0.9804 | 1.0008 |
+| QAOA p=2 | 1.0000 | 1.3765 |
+| QAOA p=3 | 1.0000 | 1.7785 |
+
+These experiments illustrate a solution-quality versus computational-cost tradeoff as QAOA circuit depth increases. For these small simulated instances, the classical exact solver remains substantially faster.
+
+## Experimental Results
+
+### Approximation Ratio
+
+![Approximation ratio](results/approximation_ratio.png)
+
+### Runtime
+
+![Runtime comparison](results/runtime.png)
+
+Full experimental data are available in [`results/benchmark_results.csv`](results/benchmark_results.csv).
 
 ## Project Structure
 
 ```text
 quantum-vs-classical-maxcut/
-├── README.md
-├── environment.yml
-├── requirements.txt
-├── run_experiment.py
 ├── src/
 │   ├── classical.py
 │   ├── problem.py
 │   ├── quantum.py
 │   └── visualization.py
-└── results/
+├── results/
+│   ├── benchmark_results.csv
+│   ├── approximation_ratio.png
+│   └── runtime.png
+├── run_experiment.py
+├── environment.yml
+├── requirements.txt
+└── README.md
 ```
 
-## Setup with Anaconda
+## Tools
+
+- Python
+- Qiskit
+- Qiskit Optimization
+- NumPy
+- pandas
+- NetworkX
+- Matplotlib
+- Conda
+
+## Reproducing the Experiment
+
+Create the Conda environment:
 
 ```bash
 conda env create -f environment.yml
 conda activate quantum-maxcut
 ```
 
-Or, inside an existing environment:
-
-```bash
-pip install -r requirements.txt
-```
-
-## Run
-
-Open the folder in VS Code, select the `quantum-maxcut` Python interpreter, then run:
+Run the benchmark:
 
 ```bash
 python run_experiment.py
 ```
 
-The script creates several random graph instances, solves each one classically and with QAOA, and saves:
+Results are automatically written to the `results/` directory.
 
-- `results/benchmark_results.csv`
-- `results/approximation_ratio.png`
-- `results/runtime.png`
+## Possible Extensions
 
-## Metrics
+Future experiments could investigate:
 
-**Cut value:** Number (or total weight) of edges crossing between the two selected vertex sets.
-
-**Approximation ratio:**
-
-\[
-\text{Approximation Ratio} =
-\frac{\text{QAOA Cut Value}}{\text{Optimal Classical Cut Value}}
-\]
-
-A value of `1.0` means QAOA found the known optimum for that instance.
-
-**Runtime:** Wall-clock time taken by each solver. Because QAOA is simulated on a classical computer here, runtime comparisons should be interpreted as implementation/experimental comparisons—not evidence of quantum speedup.
-
-## Experiments to Add
-
-Once the baseline works, extend the project one experiment at a time:
-
-1. Increase graph size from 4–6 vertices to larger instances.
-2. Compare QAOA depth `reps = 1, 2, 3`.
-3. Run multiple random seeds per graph size.
-4. Compare sparse vs. dense graphs.
-5. Add weighted Max-Cut.
-6. Compare noiseless simulation against an Aer noise model.
-7. Compare QAOA against a scalable classical heuristic rather than only brute force.
-8. Report mean approximation ratio and variability over repeated trials.
-
-## Resume Version
-
-**Quantum vs. Classical Optimization Benchmark | Python, Qiskit**
-
-- Implemented a reproducible Max-Cut benchmark comparing QAOA with a classical exact solver across randomly generated graph instances.
-- Formulated combinatorial optimization problems as binary quadratic programs and evaluated quantum solutions using approximation ratio and runtime.
-- Designed numerical experiments to study how graph size and QAOA circuit depth affect optimization performance.
-- Built automated visualization and reporting tools for comparing classical and quantum results.
-
-Only use these bullets after you have run, understood, and validated the corresponding experiments.
-
-## Responsible Interpretation
-
-This repository is intended to demonstrate quantum-algorithm development, scientific computing, and experimental reasoning. Small simulator benchmarks do not demonstrate practical quantum advantage. Results should be presented as evidence about algorithm behavior under the tested conditions.
+- Larger graph instances
+- Weighted Max-Cut
+- Additional QAOA depths and optimizer settings
+- More random graph seeds and graph densities
+- Noisy quantum simulation
+- Alternative classical heuristics
+- Statistical variability across repeated QAOA runs
